@@ -1,0 +1,9 @@
+[project]
+name = "document-copilot-backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+add-bounds = "exact"
+exclude-newer = "7 days"
