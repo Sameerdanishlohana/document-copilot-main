@@ -1,22 +1,42 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { env } from "./lib/env"
+import { api, ApiError } from "./lib/api"
+import { supabase } from "./lib/supabase"
 
 export default function App() {
   const [status, setStatus] = useState<string>("Disconnected")
+  const [authStatus, setAuthStatus] = useState<string>("Checking Auth...")
 
   async function checkBackend() {
     try {
-      const res = await fetch(`${env.apiBaseUrl}/health`)
-      const data = await res.json()
+      const data = await api.get<{ status: string }>("/health")
       if (data.status === "ok") {
         setStatus("Connected to Backend API")
       } else {
-        setStatus("Backend return non-ok status")
+        setStatus("Backend returned non-ok status")
       }
-    } catch {
-      setStatus("Failed to connect to Backend API")
+    } catch (err) {
+      if (err instanceof ApiError && err.isNetworkError) {
+        setStatus("Failed to connect (Network / CORS error)")
+      } else if (err instanceof ApiError) {
+        setStatus(`HTTP ${err.status}: ${err.message}`)
+      } else {
+        setStatus("Failed to connect to Backend API")
+      }
     }
   }
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) {
+        setAuthStatus(`Authenticated as ${data.session.user.email ?? "user"}`)
+      } else {
+        setAuthStatus("Not Authenticated (Guest)")
+      }
+    }).catch(() => {
+      setAuthStatus("Supabase auth check failed")
+    })
+  }, [])
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6">
@@ -40,6 +60,10 @@ export default function App() {
               {status}
             </span>
           </div>
+          <div className="flex justify-between text-xs text-slate-400">
+            <span>Auth Status:</span>
+            <span className="font-mono text-slate-200">{authStatus}</span>
+          </div>
         </div>
 
         <button
@@ -52,3 +76,4 @@ export default function App() {
     </div>
   )
 }
+
