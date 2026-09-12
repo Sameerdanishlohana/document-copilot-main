@@ -62,8 +62,8 @@ Goal: analysts can sign in with email; backend rejects unauthenticated requests.
 
 **Backend**
 
-- [ ] `app/auth/dependencies.py` — verify `Authorization: Bearer <supabase_jwt>`, expose `get_current_user`
-- [ ] Reject missing/expired tokens with `401` before any chat or retrieval work
+- [x] `app/auth/dependencies.py` — verify `Authorization: Bearer <supabase_jwt>`, expose `get_current_user`
+- [x] Reject missing/expired tokens with `401` before any chat or retrieval work
 
 **Frontend**
 
