@@ -6,6 +6,7 @@ import uvicorn
 from supabase_auth.types import User
 
 from app.auth.dependencies import get_current_user
+from app.api.chat import router as chat_router
 from app.config import settings
 
 app = FastAPI(title="Document Copilot")
@@ -18,6 +19,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(chat_router)
 
 
 @app.get("/health")

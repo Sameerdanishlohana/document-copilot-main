@@ -86,10 +86,32 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   return data as T
 }
 
+export interface Thread {
+  id: number
+  owner_id: string
+  title: string
+  created_at: string
+  updated_at: string
+}
+
+export interface ChatMessageItem {
+  id: number
+  thread_id: number
+  role: "user" | "assistant"
+  content: string
+  message_json: Record<string, unknown>
+  created_at: string
+}
+
 export const api = {
   get: <T>(endpoint: string, options?: RequestOptions) => request<T>(endpoint, { ...options, method: "GET" }),
   post: <T>(endpoint: string, body?: unknown, options?: RequestOptions) => request<T>(endpoint, { ...options, method: "POST", body }),
   put: <T>(endpoint: string, body?: unknown, options?: RequestOptions) => request<T>(endpoint, { ...options, method: "PUT", body }),
   patch: <T>(endpoint: string, body?: unknown, options?: RequestOptions) => request<T>(endpoint, { ...options, method: "PATCH", body }),
   delete: <T>(endpoint: string, options?: RequestOptions) => request<T>(endpoint, { ...options, method: "DELETE" }),
+
+  // Chat helpers
+  listThreads: () => request<Thread[]>("/chats", { method: "GET" }),
+  createThread: (title: string = "New Chat") => request<Thread>("/chats", { method: "POST", body: { title } }),
+  getThreadMessages: (threadId: number) => request<ChatMessageItem[]>(`/chats/${threadId}/messages`, { method: "GET" }),
 }
