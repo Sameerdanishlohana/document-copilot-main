@@ -22,29 +22,16 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
-        })
-        if (signUpError) {
-          setError(signUpError.message)
-          return
-        }
-
+        const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+        if (signUpError) { setError(signUpError.message); return }
         if (data.session) {
           navigate(from, { replace: true })
         } else {
-          setMessage("Account created. If email confirmation is enabled, please check your inbox to verify your email.")
+          setMessage("Account created. Check your inbox if email confirmation is enabled.")
         }
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (signInError) {
-          setError(signInError.message)
-          return
-        }
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+        if (signInError) { setError(signInError.message); return }
         navigate(from, { replace: true })
       }
     } catch (err) {
@@ -55,87 +42,150 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6">
-      <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl space-y-6">
-        <div className="space-y-2 text-center">
-          <div className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 mb-2 font-mono font-bold text-lg">
-            DC
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex">
+      {/* Left — branding half */}
+      <div className="hidden lg:flex lg:w-[45%] bg-zinc-900 border-r border-zinc-800/60 flex-col justify-between p-12">
+        <div>
+          {/* Logo row */}
+          <div className="flex items-center space-x-2.5 mb-20">
+            <div className="h-8 w-8 rounded-md bg-emerald-500 flex items-center justify-center">
+              <span className="text-[13px] font-bold text-zinc-950 leading-none">DC</span>
+            </div>
+            <span className="text-[15px] font-semibold tracking-tight text-zinc-100">
+              Document Copilot
+            </span>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            {isSignUp ? "Create an Analyst Account" : "Sign in to Document Copilot"}
-          </h1>
-          <p className="text-slate-400 text-sm">
-            {isSignUp
-              ? "Register to access Driftwood Capital's SEC research intelligence"
-              : "Enter your credentials to continue research"}
-          </p>
+
+          {/* Headline */}
+          <div className="max-w-sm space-y-5 animate-fade-in-up">
+            <h2 className="text-[28px] font-semibold leading-[1.2] tracking-tight text-white">
+              Research SEC filings
+              <br />
+              with cited AI answers.
+            </h2>
+            <p className="text-[15px] leading-relaxed text-zinc-400">
+              Ask questions across 10-K filings for AAPL, MSFT, NVDA, AMZN, and GOOGL.
+              Every claim links back to its source passage.
+            </p>
+
+            {/* Compact feature list */}
+            <div className="pt-4 space-y-3">
+              {[
+                "Hybrid semantic + keyword retrieval",
+                "Inline source citations on every answer",
+                "Real-time streamed responses",
+              ].map((text, i) => (
+                <div
+                  key={text}
+                  className="flex items-center space-x-3 text-[13px] text-zinc-300 animate-fade-in"
+                  style={{ animationDelay: `${0.3 + i * 0.1}s` }}
+                >
+                  <div className="h-1 w-1 rounded-full bg-emerald-500 shrink-0" />
+                  <span>{text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
-        {error && (
-          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-xs leading-relaxed">
-            {error}
-          </div>
-        )}
+        <p className="text-[11px] text-zinc-600">
+          Driftwood Capital · Internal Research Tool
+        </p>
+      </div>
 
-        {message && (
-          <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-emerald-400 text-xs leading-relaxed">
-            {message}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300" htmlFor="email">
-              Email address
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="analyst@driftwoodcapital.com"
-              className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-colors"
-            />
+      {/* Right — form half */}
+      <div className="flex-1 flex items-center justify-center p-6 lg:p-12">
+        <div className="w-full max-w-[380px] animate-scale-in">
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center space-x-2.5 mb-10">
+            <div className="h-8 w-8 rounded-md bg-emerald-500 flex items-center justify-center">
+              <span className="text-[13px] font-bold text-zinc-950 leading-none">DC</span>
+            </div>
+            <span className="text-[15px] font-semibold tracking-tight">Document Copilot</span>
           </div>
 
-          <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-300" htmlFor="password">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••••••"
-              className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-500 transition-colors"
-            />
+          {/* Heading */}
+          <div className="mb-8">
+            <h1 className="text-xl font-semibold tracking-tight text-white">
+              {isSignUp ? "Create an account" : "Sign in"}
+            </h1>
+            <p className="text-sm text-zinc-500 mt-1">
+              {isSignUp ? "Get started with filing research" : "Continue your research"}
+            </p>
           </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium text-sm rounded-lg transition-colors shadow-sm cursor-pointer"
-          >
-            {loading ? "Processing..." : isSignUp ? "Create account" : "Sign in"}
-          </button>
-        </form>
+          {/* Alerts */}
+          {error && (
+            <div className="mb-5 px-3.5 py-3 bg-red-500/5 border border-red-500/10 rounded-lg animate-fade-in">
+              <p className="text-[13px] text-red-400">{error}</p>
+            </div>
+          )}
+          {message && (
+            <div className="mb-5 px-3.5 py-3 bg-emerald-500/5 border border-emerald-500/10 rounded-lg animate-fade-in">
+              <p className="text-[13px] text-emerald-400">{message}</p>
+            </div>
+          )}
 
-        <div className="text-center pt-2 border-t border-slate-800/80">
-          <button
-            type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp)
-              setError(null)
-              setMessage(null)
-            }}
-            className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors cursor-pointer"
-          >
-            {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
-          </button>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[12px] font-medium text-zinc-400 mb-1.5" htmlFor="email">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@company.com"
+                className="w-full h-10 px-3 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-zinc-600 transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[12px] font-medium text-zinc-400 mb-1.5" htmlFor="password">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full h-10 px-3 bg-zinc-900 border border-zinc-800 rounded-lg text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:border-zinc-600 transition-colors"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-10 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-zinc-950 font-semibold text-sm rounded-lg transition-colors cursor-pointer relative"
+            >
+              {loading ? (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-4 w-4 border-2 border-zinc-950/20 border-t-zinc-950 rounded-full animate-spin" />
+                </div>
+              ) : (
+                isSignUp ? "Create account" : "Sign in"
+              )}
+            </button>
+          </form>
+
+          {/* Toggle */}
+          <div className="mt-6 pt-5 border-t border-zinc-800/60 text-center">
+            <button
+              type="button"
+              onClick={() => { setIsSignUp(!isSignUp); setError(null); setMessage(null) }}
+              className="text-[13px] text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer"
+            >
+              {isSignUp
+                ? <>Have an account? <span className="text-zinc-200 font-medium">Sign in</span></>
+                : <>Need an account? <span className="text-zinc-200 font-medium">Sign up</span></>}
+            </button>
+          </div>
         </div>
       </div>
     </div>

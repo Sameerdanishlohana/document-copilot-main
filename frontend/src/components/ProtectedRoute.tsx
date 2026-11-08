@@ -7,9 +7,9 @@ export function ProtectedRoute() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
-        <div className="h-6 w-6 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin mb-3" />
-        <p className="text-sm">Verifying authentication...</p>
+      <div className="min-h-screen bg-zinc-950 flex flex-col items-center justify-center gap-3 animate-fade-in">
+        <div className="h-5 w-5 border-2 border-zinc-700 border-t-zinc-400 rounded-full animate-spin" />
+        <p className="text-xs text-zinc-500">Verifying session…</p>
       </div>
     )
   }
