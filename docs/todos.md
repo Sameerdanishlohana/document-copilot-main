@@ -103,7 +103,7 @@ Goal: end-to-end chat UI streaming from FastAPI, no real retrieval yet.
 Goal: SEC filings in the corpus are parsed, chunked, embedded, and stored in Supabase.
 
 - [ ] `ingest/` scripts (or CLI entrypoint) for one-off corpus loading
-- [ ] HTML → normalized Markdown extraction (preserve page/section metadata)
+- [x] HTML → normalized Markdown extraction (preserve page/section metadata)
 - [ ] Chunking strategy (size + overlap; store chunk index, page, section, ticker, filing type, year)
 - [ ] Write `source_documents` rows with filing metadata from `manifest.json`
 - [ ] Write `document_chunks` rows with text + metadata
