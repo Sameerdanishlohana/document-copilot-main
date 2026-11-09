@@ -24,3 +24,4 @@ The Company's business, reputation, results of operations and financial conditio
     assert len(chunks) >= 1
     assert all(c.token_count > 0 for c in chunks)
     assert chunks[0].chunk_index == 0
+
