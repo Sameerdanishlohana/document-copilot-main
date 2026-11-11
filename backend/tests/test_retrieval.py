@@ -45,3 +45,4 @@ def test_fuse_search_results_with_metadata():
     assert fused[0]["id"] == 102
     assert "rrf_score" in fused[0]
     assert fused[0]["meta"]["ticker"] == "MSFT"
+

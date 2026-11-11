@@ -87,3 +87,4 @@ class DocumentRetriever:
                 item["neighbors"] = neighbors
 
             return top_results
+

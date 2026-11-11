@@ -136,3 +136,4 @@ def get_neighbor_chunks(
     }
     res = session.execute(text(sql), params)
     return [dict(row) for row in res.mappings()]
+

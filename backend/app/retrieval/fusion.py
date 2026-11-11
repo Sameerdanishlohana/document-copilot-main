@@ -67,3 +67,4 @@ def fuse_search_results(
         result_docs.append(doc)
 
     return result_docs
+
