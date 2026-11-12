@@ -18,7 +18,10 @@ class DocumentRetriever:
         openai_client: OpenAI | None = None,
         db_session_factory: sessionmaker[Session] | None = None,
     ):
-        self.openai_client = openai_client or OpenAI(api_key=settings.openai_api_key)
+        self.openai_client = openai_client or OpenAI(
+            api_key=settings.effective_api_key,
+            base_url=settings.effective_base_url,
+        )
         if db_session_factory is None:
             engine = create_engine(settings.sqlalchemy_database_url, pool_pre_ping=True)
             self.session_factory = sessionmaker(bind=engine, expire_on_commit=False)

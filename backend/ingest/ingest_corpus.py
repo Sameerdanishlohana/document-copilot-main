@@ -32,15 +32,34 @@ def get_existing_accession_numbers(client) -> set[str]:
 
 
 def generate_embeddings_batch(
-    openai_client: OpenAI, texts: list[str], model: str = settings.openai_embedding_model
+    openai_client: OpenAI, texts: list[str], model: str = settings.openai_embedding_model, max_retries: int = 3
 ) -> list[list[float]]:
-    """Generate embeddings for a list of texts in a single batch call."""
+    """Generate embeddings for a list of texts in a single batch call with retry."""
     if not texts:
         return []
-    # Replace newlines with spaces as per OpenAI guidance for text-embedding-3
     cleaned_texts = [t.replace("\r\n", " ").replace("\n", " ") for t in texts]
-    response = openai_client.embeddings.create(input=cleaned_texts, model=model)
-    return [item.embedding for item in response.data]
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = openai_client.embeddings.create(input=cleaned_texts, model=model)
+            return [item.embedding for item in response.data]
+        except Exception as err:
+            if attempt == max_retries:
+                raise
+            print(f"      [Retry {attempt}/{max_retries}] Embedding error: {err}. Retrying in 2s...")
+            time.sleep(2)
+
+
+def insert_chunks_with_retry(supabase_client, chunk_rows: list[dict], max_retries: int = 3) -> None:
+    """Insert chunk batch into Supabase with automatic retry on network disconnects."""
+    for attempt in range(1, max_retries + 1):
+        try:
+            supabase_client.table("document_chunks").insert(chunk_rows).execute()
+            return
+        except Exception as err:
+            if attempt == max_retries:
+                raise
+            print(f"      [Retry {attempt}/{max_retries}] DB insert error: {err}. Retrying in 2s...")
+            time.sleep(2)
 
 
 def ingest_corpus(
@@ -63,7 +82,10 @@ def ingest_corpus(
     print(f"Total filings to process: {len(filings)}")
 
     supabase = get_service_role_client()
-    openai_client = OpenAI(api_key=settings.openai_api_key)
+    openai_client = OpenAI(
+        api_key=settings.effective_api_key,
+        base_url=settings.effective_base_url,
+    )
 
     existing_accessions = get_existing_accession_numbers(supabase)
     print(f"Already ingested accession numbers: {len(existing_accessions)}")
@@ -159,7 +181,7 @@ def ingest_corpus(
                 )
 
             # Insert batch into Supabase
-            supabase.table("document_chunks").insert(chunk_rows).execute()
+            insert_chunks_with_retry(supabase, chunk_rows)
             total_chunks_written += len(chunk_rows)
             print(f"    Uploaded chunks {b_start + 1}-{b_start + len(b_chunks)} of {len(chunks)}")
 

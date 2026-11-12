@@ -82,41 +82,66 @@ def chunk_markdown(
         if para_tokens == 0:
             continue
 
-        if current_chunk_section is None and section:
-            current_chunk_section = section
-
-        # If adding this paragraph exceeds target size and we already have content
-        if current_chunk_tokens + para_tokens > target_tokens and current_chunk_parts:
-            chunk_str = "\n\n".join(current_chunk_parts)
-            chunks.append(
-                DocumentChunk(
-                    chunk_index=chunk_index,
-                    text=chunk_str,
-                    token_count=current_chunk_tokens,
-                    section=current_chunk_section,
-                )
-            )
-            chunk_index += 1
-
-            # Prepare overlap
-            overlap_parts: list[str] = []
-            overlap_count = 0
-            for part in reversed(current_chunk_parts):
-                part_toks = count_tokens(part)
-                if overlap_count + part_toks <= overlap_tokens:
-                    overlap_parts.insert(0, part)
-                    overlap_count += part_toks
+        # If a single paragraph/table exceeds target_tokens, split it line by line
+        sub_paragraphs: list[str] = []
+        if para_tokens > target_tokens * 2:
+            lines_in_para = para_text.splitlines()
+            current_sub: list[str] = []
+            current_sub_toks = 0
+            for l in lines_in_para:
+                l_toks = count_tokens(l)
+                if current_sub_toks + l_toks > target_tokens and current_sub:
+                    sub_paragraphs.append("\n".join(current_sub))
+                    current_sub = [l]
+                    current_sub_toks = l_toks
                 else:
-                    break
+                    current_sub.append(l)
+                    current_sub_toks += l_toks
+            if current_sub:
+                sub_paragraphs.append("\n".join(current_sub))
+        else:
+            sub_paragraphs = [para_text]
 
-            current_chunk_parts = list(overlap_parts)
-            current_chunk_tokens = overlap_count
-            current_chunk_section = section
+        for sub_text in sub_paragraphs:
+            sub_toks = count_tokens(sub_text)
+            if sub_toks == 0:
+                continue
 
-        current_chunk_parts.append(para_text)
-        current_chunk_tokens += para_tokens
-        if section:
-            current_chunk_section = section
+            if current_chunk_section is None and section:
+                current_chunk_section = section
+
+            # If adding this sub-paragraph exceeds target size and we already have content
+            if current_chunk_tokens + sub_toks > target_tokens and current_chunk_parts:
+                chunk_str = "\n\n".join(current_chunk_parts)
+                chunks.append(
+                    DocumentChunk(
+                        chunk_index=chunk_index,
+                        text=chunk_str,
+                        token_count=current_chunk_tokens,
+                        section=current_chunk_section,
+                    )
+                )
+                chunk_index += 1
+
+                # Prepare overlap
+                overlap_parts: list[str] = []
+                overlap_count = 0
+                for part in reversed(current_chunk_parts):
+                    part_toks = count_tokens(part)
+                    if overlap_count + part_toks <= overlap_tokens:
+                        overlap_parts.insert(0, part)
+                        overlap_count += part_toks
+                    else:
+                        break
+
+                current_chunk_parts = list(overlap_parts)
+                current_chunk_tokens = overlap_count
+                current_chunk_section = section
+
+            current_chunk_parts.append(sub_text)
+            current_chunk_tokens += sub_toks
+            if section:
+                current_chunk_section = section
 
     if current_chunk_parts:
         chunk_str = "\n\n".join(current_chunk_parts)

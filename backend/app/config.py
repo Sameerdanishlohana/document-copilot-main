@@ -18,11 +18,14 @@ class Settings(BaseSettings):
     supabase_service_role_key: str
     database_url: str
 
-    openai_api_key: str
-    openai_embedding_model: str = "text-embedding-3-small"
+    openai_api_key: str | None = None
+    openai_base_url: str | None = None
+    open_router_key: str | None = None
+
+    openai_embedding_model: str = "openai/text-embedding-3-small"
     openai_embedding_dimensions: int = 1536
-    openai_chat_model: str = "gpt-5.5"
-    openai_grounding_model: str = "gpt-4.1-mini"
+    openai_chat_model: str = "deepseek/deepseek-chat"
+    openai_grounding_model: str = "deepseek/deepseek-chat"
     openai_agent_request_limit: int = 20
     openai_agent_temperature: float = 0.0
 
@@ -38,6 +41,25 @@ class Settings(BaseSettings):
 
     # Comma-separated in .env; use `cors_origins` for the parsed list.
     allowed_origins: str = "http://localhost:5173"
+
+    @computed_field
+    @property
+    def effective_api_key(self) -> str:
+        """Return either the explicit open_router_key or openai_api_key."""
+        key = self.open_router_key or self.openai_api_key
+        if not key:
+            raise ValueError("Neither OPEN_ROUTER_KEY nor OPENAI_API_KEY is configured.")
+        return key
+
+    @computed_field
+    @property
+    def effective_base_url(self) -> str | None:
+        """Return base_url for OpenRouter if configured or if open_router_key is present."""
+        if self.openai_base_url:
+            return self.openai_base_url
+        if self.open_router_key:
+            return "https://openrouter.ai/api/v1"
+        return None
 
     @computed_field
     @property

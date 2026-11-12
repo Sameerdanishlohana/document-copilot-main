@@ -41,10 +41,10 @@ def query_semantic(
         text,
         token_count,
         metadata,
-        1 - (embedding <=> :embedding::vector) AS similarity_score
+        1 - (embedding <=> CAST(:embedding AS vector)) AS similarity_score
     FROM document_chunks
     {where_clause}
-    ORDER BY embedding <=> :embedding::vector ASC
+    ORDER BY embedding <=> CAST(:embedding AS vector) ASC
     LIMIT :limit;
     """
 
