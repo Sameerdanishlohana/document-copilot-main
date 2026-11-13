@@ -35,3 +35,4 @@ def format_finish_event(finish_reason: str = "stop", usage: dict[str, Any] | Non
         "usage": usage or {"promptTokens": 0, "completionTokens": 0},
     })
     return f"d:{payload}\n"
+

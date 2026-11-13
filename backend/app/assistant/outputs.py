@@ -48,3 +48,4 @@ class DocumentAgentDeps:
     thread_id: int
     retriever: DocumentRetriever
     retrieved_passages: list[dict[str, Any]]
+

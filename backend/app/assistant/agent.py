@@ -34,3 +34,4 @@ def get_retrieved_passages(ctx: RunContext[DocumentAgentDeps]) -> list[dict]:
         }
         for p in ctx.deps.retrieved_passages
     ]
+

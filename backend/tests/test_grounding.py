@@ -64,3 +64,4 @@ def test_hallucinated_excerpt_raises_error():
     with pytest.raises(GroundingValidationError) as exc:
         validate_grounding(answer, allowed)
     assert "does not match passage text" in str(exc.value)
+
