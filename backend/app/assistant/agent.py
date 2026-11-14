@@ -1,8 +1,10 @@
 """Agent definition for Document Copilot using PydanticAI."""
 
 from pathlib import Path
+from openai import AsyncOpenAI
 from pydantic_ai import Agent, RunContext
-from pydantic_ai.models.openai import OpenAIModel
+from pydantic_ai.models.openai import OpenAIChatModel
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from app.assistant.outputs import DocumentAgentDeps, GroundedAnswer
 from app.config import settings
@@ -10,18 +12,20 @@ from app.config import settings
 _INSTRUCTIONS_PATH = Path(__file__).resolve().parent / "instructions.md"
 SYSTEM_INSTRUCTIONS = _INSTRUCTIONS_PATH.read_text(encoding="utf-8")
 
-# Configure model with OpenRouter base_url and API key
-ai_model = OpenAIModel(
-    model_name=settings.openai_chat_model,
-    base_url=settings.effective_base_url,
+# Configure provider with OpenRouter credentials
+client = AsyncOpenAI(
     api_key=settings.effective_api_key,
+    base_url=settings.effective_base_url,
 )
+provider = OpenAIProvider(openai_client=client)
+ai_model = OpenAIChatModel(settings.openai_chat_model, provider=provider)
 
 document_agent = Agent(
     model=ai_model,
     deps_type=DocumentAgentDeps,
     output_type=GroundedAnswer,
     system_prompt=SYSTEM_INSTRUCTIONS,
+    retries=3,
 )
 
 
