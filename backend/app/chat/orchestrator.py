@@ -12,8 +12,8 @@ import asyncio
 from typing import AsyncGenerator
 from supabase import Client
 
-from app.assistant.agent import document_agent
-from app.assistant.outputs import DocumentAgentDeps, GroundedAnswer
+from app.assistant.generator import generate_grounded_answer
+from app.assistant.outputs import GroundedAnswer
 from app.chat.streaming import format_citations_data, format_finish_event, format_text_delta
 from app.database import chats
 from app.grounding.validator import validate_grounding
@@ -28,28 +28,19 @@ async def run_turn(
     retriever: DocumentRetriever,
 ) -> AsyncGenerator[str, None]:
     """Execute one grounded research turn and stream events."""
-    # 1. Hybrid prefetch
+    # 1. Hybrid prefetch (vector + FTS + RRF)
     retrieved_passages = retriever.search(query=user_query, top_k=6)
 
-    # 2. Agent invocation with typed dependencies
-    deps = DocumentAgentDeps(
-        user_id=user_id,
-        thread_id=thread_id,
-        retriever=retriever,
-        retrieved_passages=retrieved_passages,
+    # 2. Generate grounded answer with citations
+    grounded_output: GroundedAnswer = await generate_grounded_answer(
+        query=user_query,
+        passages=retrieved_passages,
     )
-
-    result = await document_agent.run(
-        user_prompt=user_query,
-        deps=deps,
-    )
-
-    grounded_output: GroundedAnswer = result.data
 
     # 3. Fail-closed grounding validation
     validated_citations = validate_grounding(
         answer=grounded_output,
-        allowed_chunks=deps.retrieved_passages,
+        allowed_chunks=retrieved_passages,
     )
 
     # 4. Stream response text deltas to the frontend in word chunks
@@ -88,3 +79,4 @@ async def run_turn(
 
     # 7. Finish event
     yield format_finish_event()
+

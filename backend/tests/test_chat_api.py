@@ -53,8 +53,9 @@ def test_thread_forbidden_for_different_user(mock_get_client):
     assert "permission" in res.json()["detail"]
 
 
+@patch("app.api.chat.run_turn")
 @patch("app.api.chat.get_service_role_client")
-def test_chat_stream_stub(mock_get_client):
+def test_chat_stream_endpoint(mock_get_client, mock_run_turn):
     mock_supabase = MagicMock()
     mock_get_client.return_value = mock_supabase
 
@@ -67,6 +68,12 @@ def test_chat_stream_stub(mock_get_client):
     mock_supabase.table().insert().execute.return_value.data = [{"id": 10}]
     mock_supabase.table().update().eq().execute.return_value.data = [{}]
 
+    async def dummy_generator(*args, **kwargs):
+        yield '0:"Grounded response"\n'
+        yield 'd:{"finishReason": "stop"}\n'
+
+    mock_run_turn.return_value = dummy_generator()
+
     payload = {
         "threadId": 1,
         "messages": [
@@ -75,5 +82,4 @@ def test_chat_stream_stub(mock_get_client):
     }
     res = client.post("/chat/stream", json=payload)
     assert res.status_code == 200
-    assert '0:"This ' in res.text
-    assert 'revenue' in res.text
+    assert '0:"Grounded response"' in res.text
