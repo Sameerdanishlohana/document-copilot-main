@@ -75,7 +75,48 @@ def save_message(
     return response.data[0]
 
 
+def save_citations(
+    client: Client,
+    message_id: int,
+    citations: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Persist normalized citation records associated with an assistant message."""
+    if not citations:
+        return []
+
+    rows = []
+    for c in citations:
+        rows.append(
+            {
+                "message_id": message_id,
+                "chunk_id": c.get("chunk_id"),
+                "company": c.get("company", ""),
+                "filing_type": c.get("filing_type", "10-K"),
+                "filing_date": c.get("filing_date"),
+                "page": c.get("page"),
+                "section": c.get("section"),
+                "excerpt": c.get("excerpt", ""),
+            }
+        )
+
+    response = client.table("message_citations").insert(rows).execute()
+    return response.data or []
+
+
+def list_message_citations(client: Client, message_id: int) -> list[dict[str, Any]]:
+    """Fetch citations for a given message."""
+    response = (
+        client.table("message_citations")
+        .select("*")
+        .eq("message_id", message_id)
+        .order("id", desc=False)
+        .execute()
+    )
+    return response.data or []
+
+
 def update_thread_timestamp(client: Client, thread_id: int) -> None:
     """Update updated_at on chat_threads to bump active conversations."""
     client.table("chat_threads").update({"updated_at": "now()"}).eq("id", thread_id).execute()
+
 
