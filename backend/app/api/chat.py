@@ -10,8 +10,10 @@ from pydantic import BaseModel, Field
 from supabase_auth.types import User
 
 from app.auth.dependencies import get_current_user
+from app.chat.orchestrator import run_turn
 from app.database import chats
 from app.database.supabase import get_service_role_client
+from app.retrieval.retriever import DocumentRetriever
 
 router = APIRouter(prefix="", tags=["chat"])
 
@@ -130,45 +132,16 @@ async def chat_stream(
             message_json=latest_user_message,
         )
 
-    # Stubbed assistant reply chunks for Phase 3
-    stub_response_text = (
-        f"This is a stubbed response from Document Copilot (Phase 3). "
-        f"You asked: \"{user_content}\". "
-        f"In later phases, real SEC 10-K retrieval (pgvector + BM25) and citations will be streamed here."
-    )
-
-    async def event_generator():
-        collected_chunks = []
-        words = stub_response_text.split(" ")
-        for i, word in enumerate(words):
-            chunk = word + (" " if i < len(words) - 1 else "")
-            collected_chunks.append(chunk)
-            # Emit AI SDK Data Stream protocol text delta (0:"chunk\n")
-            yield f"0:{json.dumps(chunk)}\n"
-            await asyncio.sleep(0.04)
-
-        full_assistant_reply = "".join(collected_chunks)
-        assistant_json = {
-            "role": "assistant",
-            "content": full_assistant_reply,
-        }
-
-        # Persist assistant reply to DB
-        chats.save_message(
-            client=client,
-            thread_id=thread_id,
-            role="assistant",
-            content=full_assistant_reply,
-            message_json=assistant_json,
-        )
-        chats.update_thread_timestamp(client, thread_id)
-
-        # Emit completion data / finish part if needed
-        finish_payload = json.dumps({"finishReason": "stop", "usage": {"promptTokens": 0, "completionTokens": 0}})
-        yield f"d:{finish_payload}\n"
+    retriever = DocumentRetriever()
 
     return StreamingResponse(
-        event_generator(),
+        run_turn(
+            user_query=user_content,
+            thread_id=thread_id,
+            user_id=user.id,
+            supabase_client=client,
+            retriever=retriever,
+        ),
         media_type="text/plain; charset=utf-8",
         headers={
             "x-vercel-ai-data-stream": "v1",
