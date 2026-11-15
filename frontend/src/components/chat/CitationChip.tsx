@@ -42,3 +42,4 @@ export function CitationChip({ citation, index, onSelect, isSelected = false }: 
     </button>
   )
 }
+

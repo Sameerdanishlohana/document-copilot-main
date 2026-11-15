@@ -72,3 +72,4 @@ export function SourcePassagePanel({ citation, onClose }: SourcePassagePanelProp
     </aside>
   )
 }
+

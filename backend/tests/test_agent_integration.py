@@ -1,9 +1,8 @@
 """Integration tests for Phase 6 LLM answer generation and citation grounding."""
 
-import json
-from unittest.mock import MagicMock
-import anyio
 import pytest
+import anyio
+from unittest.mock import MagicMock
 
 from app.chat.orchestrator import run_turn
 
@@ -83,8 +82,8 @@ async def test_orchestrator_refuses_when_no_evidence():
     ):
         events.append(event)
 
-    text_parts = [json.loads(e.strip()[2:]) for e in events if e.startswith("0:")]
-    full_text = "".join(text_parts).lower()
+    text_parts = [e[2:].strip().strip('"') for e in events if e.startswith("0:")]
+    combined_answer = " ".join(text_parts).lower()
 
     # The model must declare lack of evidence
-    assert any(phrase in full_text for phrase in ["not contain enough evidence", "insufficient", "no evidence", "not disclose", "does not contain"])
+    assert any(phrase in combined_answer for phrase in ["not contain enough evidence", "insufficient", "no evidence", "not disclose"])
