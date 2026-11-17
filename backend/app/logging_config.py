@@ -48,3 +48,4 @@ def setup_logging() -> None:
 
 
 logger = structlog.get_logger("document_copilot")
+
