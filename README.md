@@ -49,11 +49,55 @@ You also need accounts/keys for external services once the app is wired up. Star
 
 ## Running locally
 
-To be added during the build. Setup guides:
+### 1. Database & Auth Setup
+Create a hosted Supabase project and apply migrations:
 
-- [Supabase](docs/guides/supabase-setup.md) — account, hosted project (dashboard or CLI)
-- [Backend](docs/guides/backend-setup.md)
-- [Frontend](docs/guides/frontend-setup.md)
+```bash
+cd backend
+cp .env.example .env
+# Fill in SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_JWT_SECRET, and DATABASE_URL
+uv run alembic upgrade head
+```
+
+### 2. Ingest Document Corpus
+Convert downloaded SEC 10-Ks to Markdown and ingest chunks with embeddings into pgvector + Postgres FTS:
+
+```bash
+# Optional: re-download raw 10-Ks if not already present
+uv run data/download.py
+
+# Convert raw HTML filings to markdown using Docling
+uv run backend/ingest/convert_html_to_md.py
+
+# Chunk, embed (1536-dim), and insert to Supabase pgvector & tsvector
+uv run backend/ingest/ingest_corpus.py
+```
+
+### 3. Start Backend Service
+```bash
+cd backend
+uv run uvicorn app.main:app --reload --port 8000
+```
+Backend health check is accessible at `http://localhost:8000/health`.
+
+### 4. Start Frontend SPA
+```bash
+cd frontend
+cp .env.example .env
+# Fill in VITE_API_BASE_URL, VITE_SUPABASE_URL, and VITE_SUPABASE_ANON_KEY
+npm install
+npm run dev
+```
+Open `http://localhost:5173` in your browser. Create an account with your analyst email and start querying filings.
+
+### 5. Running Tests
+```bash
+cd backend
+# Unit tests (grounding validator, fusion, streaming, mocks)
+uv run pytest
+# Live integration tests (retriever & grounded agent turn)
+uv run pytest -m integration
+```
 
 ## Sample SEC data
 
