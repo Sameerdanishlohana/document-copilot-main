@@ -5,6 +5,7 @@ import { env } from "@/lib/env"
 import { supabase } from "@/lib/supabase"
 import { api, type ChatMessageItem } from "@/lib/api"
 import { CitationChip, type Citation } from "./CitationChip"
+import { GroundedText } from "./GroundedText"
 import { SourcePassagePanel } from "./SourcePassagePanel"
 
 interface ChatPanelProps {
@@ -186,7 +187,18 @@ export function ChatPanel({ threadId }: ChatPanelProps) {
                           ? "text-zinc-100 pl-0"
                           : "text-zinc-300 border-l-2 border-zinc-800 pl-4"
                       }`}>
-                        {text}
+                        {isUser ? (
+                          text
+                        ) : (
+                          <GroundedText
+                            text={text}
+                            citations={citations}
+                            selectedCitation={selectedCitation}
+                            onSelectCitation={(c) =>
+                              setSelectedCitation((prev) => (prev?.excerpt === c.excerpt ? null : c))
+                            }
+                          />
+                        )}
                       </div>
 
                       {/* Citation chips */}
