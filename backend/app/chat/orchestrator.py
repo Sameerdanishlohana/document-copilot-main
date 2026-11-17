@@ -17,6 +17,7 @@ from app.assistant.outputs import GroundedAnswer
 from app.chat.streaming import format_citations_data, format_finish_event, format_text_delta
 from app.database import chats
 from app.grounding.validator import validate_grounding
+from app.logging_config import logger
 from app.retrieval.retriever import DocumentRetriever
 
 
@@ -28,8 +29,11 @@ async def run_turn(
     retriever: DocumentRetriever,
 ) -> AsyncGenerator[str, None]:
     """Execute one grounded research turn and stream events."""
+    logger.info("assistant_turn_start", thread_id=thread_id, user_id=user_id, query=user_query)
+
     # 1. Hybrid prefetch (vector + FTS + RRF)
     retrieved_passages = retriever.search(query=user_query, top_k=6)
+    logger.info("retrieval_complete", passage_count=len(retrieved_passages))
 
     # 2. Generate grounded answer with citations
     grounded_output: GroundedAnswer = await generate_grounded_answer(
@@ -41,6 +45,12 @@ async def run_turn(
     validated_citations = validate_grounding(
         answer=grounded_output,
         allowed_chunks=retrieved_passages,
+    )
+    logger.info(
+        "grounding_validation_complete",
+        raw_citations=len(grounded_output.citations),
+        validated_citations=len(validated_citations),
+        insufficient_evidence=grounded_output.insufficient_evidence,
     )
 
     # 4. Stream response text deltas to the frontend in word chunks

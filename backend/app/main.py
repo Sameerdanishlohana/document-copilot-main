@@ -8,6 +8,10 @@ from supabase_auth.types import User
 from app.auth.dependencies import get_current_user
 from app.api.chat import router as chat_router
 from app.config import settings
+from app.logging_config import setup_logging, logger
+
+# Initialize structured logging
+setup_logging()
 
 app = FastAPI(title="Document Copilot")
 
