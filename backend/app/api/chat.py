@@ -119,18 +119,21 @@ async def chat_stream(
     latest_user_message = body.messages[-1] if body.messages else None
     user_content = ""
     if latest_user_message:
-        # User message content in AI SDK can be a string or a list of parts
-        content_val = latest_user_message.get("content", "")
-        if isinstance(content_val, list):
-            user_content = " ".join(
-                part.get("text", "") for part in content_val if isinstance(part, dict) and "text" in part
-            )
-        elif isinstance(content_val, str):
-            user_content = content_val
-        elif "parts" in latest_user_message and isinstance(latest_user_message["parts"], list):
+        # Check 'parts' first (standard modern AI SDK payload)
+        if "parts" in latest_user_message and isinstance(latest_user_message["parts"], list):
             user_content = " ".join(
                 p.get("text", "") for p in latest_user_message["parts"] if isinstance(p, dict) and "text" in p
-            )
+            ).strip()
+
+        # Fallback to 'content' if empty
+        if not user_content:
+            content_val = latest_user_message.get("content", "")
+            if isinstance(content_val, list):
+                user_content = " ".join(
+                    part.get("text", "") for part in content_val if isinstance(part, dict) and "text" in part
+                ).strip()
+            elif isinstance(content_val, str):
+                user_content = content_val.strip()
 
         # Persist user message
         chats.save_message(
@@ -140,6 +143,10 @@ async def chat_stream(
             content=user_content,
             message_json=latest_user_message,
         )
+
+        # Automatically rename thread based on user's first prompt
+        if user_content:
+            chats.update_thread_title_if_default(client, thread_id, user_content)
 
     retriever = DocumentRetriever()
 

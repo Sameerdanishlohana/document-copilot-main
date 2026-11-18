@@ -115,6 +115,15 @@ def list_message_citations(client: Client, message_id: int) -> list[dict[str, An
     return response.data or []
 
 
+def update_thread_title_if_default(client: Client, thread_id: int, new_title: str) -> None:
+    """Update thread title if it is currently 'New Chat' or 'New Research Thread'."""
+    thread = get_thread(client, thread_id)
+    if thread and thread.get("title") in ("New Chat", "New Research Thread", "New thread"):
+        cleaned_title = new_title.strip()[:100]
+        if cleaned_title:
+            client.table("chat_threads").update({"title": cleaned_title}).eq("id", thread_id).execute()
+
+
 def update_thread_timestamp(client: Client, thread_id: int) -> None:
     """Update updated_at on chat_threads to bump active conversations."""
     client.table("chat_threads").update({"updated_at": "now()"}).eq("id", thread_id).execute()
