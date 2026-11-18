@@ -6,7 +6,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from supabase_auth.types import User
 
-from app.database.supabase import get_anon_client
+from app.database.supabase import get_anon_client, get_service_role_client
 
 security = HTTPBearer()
 
@@ -32,7 +32,19 @@ async def get_current_user(
                 detail="Invalid or expired authentication token",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        return response.user
+        # Ensure a matching row exists in `profiles` for foreign key integrity
+        user = response.user
+        try:
+            admin_client = get_service_role_client()
+            admin_client.table("profiles").upsert(
+                {"id": user.id, "email": user.email or ""},
+                on_conflict="id",
+            ).execute()
+        except Exception:
+            # Non-blocking if profile sync fails
+            pass
+
+        return user
     except HTTPException:
         raise
     except Exception as err:
