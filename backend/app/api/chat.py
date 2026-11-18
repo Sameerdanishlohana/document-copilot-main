@@ -40,8 +40,8 @@ class MessageResponse(BaseModel):
 
 
 class StreamRequest(BaseModel):
-    threadId: int | None = None
-    id: int | None = None
+    threadId: int | str | None = None
+    id: int | str | None = None
     messages: list[dict[str, Any]] = Field(default_factory=list)
 
     @property
@@ -52,6 +52,15 @@ class StreamRequest(BaseModel):
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail="threadId is required",
             )
+        if isinstance(tid, str):
+            # Handles "thread-10" or "10"
+            digits = "".join(ch for ch in tid if ch.isdigit())
+            if not digits:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Invalid threadId: {tid}",
+                )
+            return int(digits)
         return tid
 
 
