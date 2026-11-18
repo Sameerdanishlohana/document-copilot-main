@@ -10,9 +10,10 @@ import { SourcePassagePanel } from "./SourcePassagePanel"
 
 interface ChatPanelProps {
   threadId: number
+  onThreadUpdated?: () => void
 }
 
-export function ChatPanel({ threadId }: ChatPanelProps) {
+export function ChatPanel({ threadId, onThreadUpdated }: ChatPanelProps) {
   const [initialLoading, setInitialLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [inputMessage, setInputMessage] = useState("")
@@ -96,6 +97,10 @@ export function ChatPanel({ threadId }: ChatPanelProps) {
     if (!trimmed || busy) return
     setInputMessage("")
     await sendMessage({ text: trimmed })
+    // Refresh thread list after sending prompt to update thread title
+    if (onThreadUpdated) {
+      setTimeout(() => onThreadUpdated(), 1000)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

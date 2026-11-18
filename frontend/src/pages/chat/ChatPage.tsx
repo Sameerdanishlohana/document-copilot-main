@@ -87,7 +87,11 @@ export default function ChatPage() {
 
         <main className="flex-1 flex flex-col h-full overflow-hidden">
           {activeThreadId ? (
-            <ChatPanel key={activeThreadId} threadId={activeThreadId} />
+            <ChatPanel
+              key={activeThreadId}
+              threadId={activeThreadId}
+              onThreadUpdated={fetchThreads}
+            />
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center p-6 text-center animate-fade-in-up">
               <div className="h-12 w-12 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-5">
