@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # Comma-separated in .env; use `cors_origins` for the parsed list.
     allowed_origins: str = "http://localhost:5173"
 
+    app_env: str = "development"
+    log_level: str = "INFO"
+
     @computed_field
     @property
     def effective_api_key(self) -> str:
