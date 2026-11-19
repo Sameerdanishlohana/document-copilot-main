@@ -14,7 +14,14 @@ from supabase import Client
 
 from app.assistant.generator import generate_grounded_answer
 from app.assistant.outputs import GroundedAnswer
-from app.chat.streaming import format_citations_data, format_finish_event, format_text_delta
+from app.chat.streaming import (
+    format_citations_data,
+    format_finish_event,
+    format_stream_start,
+    format_text_delta,
+    format_text_end,
+    format_text_start,
+)
 from app.database import chats
 from app.grounding.validator import validate_grounding
 from app.logging_config import logger
@@ -53,12 +60,17 @@ async def run_turn(
         insufficient_evidence=grounded_output.insufficient_evidence,
     )
 
-    # 4. Stream response text deltas to the frontend in word chunks
+    # 4. Stream response text deltas to the frontend in UI message SSE format
+    yield format_stream_start()
+    yield format_text_start(text_id="text-1")
+
     words = grounded_output.answer.split(" ")
     for idx, word in enumerate(words):
         chunk = word + (" " if idx < len(words) - 1 else "")
-        yield format_text_delta(chunk)
+        yield format_text_delta(chunk, text_id="text-1")
         await asyncio.sleep(0.02)
+
+    yield format_text_end(text_id="text-1")
 
     # 5. Emit citations part if available
     if validated_citations:

@@ -42,10 +42,11 @@ async def test_orchestrator_grounded_answer_with_citations():
     ):
         events.append(event)
 
-    # Should emit text deltas (0:), citations data (2:), and finish (d:)
-    assert any(e.startswith("0:") for e in events)
-    assert any(e.startswith("2:") for e in events)
-    assert any(e.startswith("d:") for e in events)
+    # Should emit SSE events with text-delta, data-citations, and finish
+    raw_stream = "".join(events)
+    assert 'data: {"type": "text-delta"' in raw_stream or 'data: {"type":"text-delta"' in raw_stream
+    assert 'data: {"type": "data-citations"' in raw_stream or 'data: {"type":"data-citations"' in raw_stream
+    assert 'data: {"type": "finish"' in raw_stream or 'data: {"type":"finish"' in raw_stream
 
 
 @pytest.mark.integration
@@ -83,8 +84,17 @@ async def test_orchestrator_refuses_when_no_evidence():
     ):
         events.append(event)
 
-    text_parts = [json.loads(e.strip()[2:]) for e in events if e.startswith("0:")]
-    combined_answer = "".join(text_parts).lower()
+    # Extract deltas from SSE payload
+    deltas = []
+    for line in "".join(events).split("\n"):
+        if line.startswith("data: "):
+            try:
+                data = json.loads(line[6:])
+                if data.get("type") == "text-delta":
+                    deltas.append(data.get("delta", ""))
+            except Exception:
+                pass
+    combined_answer = "".join(deltas).lower()
 
     # The model must declare lack of evidence
     assert any(

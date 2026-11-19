@@ -158,10 +158,11 @@ async def chat_stream(
             supabase_client=client,
             retriever=retriever,
         ),
-        media_type="text/plain; charset=utf-8",
+        media_type="text/event-stream; charset=utf-8",
         headers={
-            "x-vercel-ai-data-stream": "v1",
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
+            "x-vercel-ai-ui-message-stream": "v1",
+            "x-accel-buffering": "no",
         },
     )
