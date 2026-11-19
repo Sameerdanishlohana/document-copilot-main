@@ -9,7 +9,7 @@ export function SourcePassagePanel({ citation, onClose }: SourcePassagePanelProp
   if (!citation) return null
 
   return (
-    <aside className="w-96 border-l border-zinc-800/80 bg-zinc-950 flex flex-col h-full animate-fade-in z-20 shadow-2xl">
+    <aside className="w-96 border-l border-zinc-800/80 bg-zinc-950 flex flex-col h-full animate-slide-in-right z-20 shadow-2xl">
       {/* Header */}
       <div className="h-14 px-4 border-b border-zinc-800/80 flex items-center justify-between bg-zinc-900/40">
         <div className="flex items-center gap-2">
