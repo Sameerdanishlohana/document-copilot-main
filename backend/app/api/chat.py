@@ -106,6 +106,16 @@ async def get_thread_messages(
     return chats.list_messages(client, thread_id)
 
 
+@router.delete("/chats/{thread_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_thread(
+    thread_id: int,
+    user: Annotated[User, Depends(get_current_user)],
+) -> None:
+    client = get_service_role_client()
+    _verify_thread_access(client, thread_id, user.id)
+    chats.delete_thread(client, thread_id)
+
+
 @router.post("/chat/stream")
 async def chat_stream(
     body: StreamRequest,

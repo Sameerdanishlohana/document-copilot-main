@@ -51,6 +51,23 @@ export default function ChatPage() {
     }
   }
 
+  const handleDeleteThread = async (id: number) => {
+    try {
+      await api.deleteThread(id)
+      setThreads((prev) => prev.filter((t) => t.id !== id))
+      if (activeThreadId === id) {
+        const remaining = threads.filter((t) => t.id !== id)
+        if (remaining.length > 0) {
+          navigate(`/chat/${remaining[0].id}`, { replace: true })
+        } else {
+          navigate("/chat", { replace: true })
+        }
+      }
+    } catch (err) {
+      console.error("Failed to delete thread:", err)
+    }
+  }
+
   return (
     <div className="h-screen w-screen bg-zinc-950 text-zinc-100 flex flex-col overflow-hidden">
       {/* Navbar */}
@@ -82,6 +99,7 @@ export default function ChatPage() {
           activeThreadId={activeThreadId}
           onSelectThread={(id) => navigate(`/chat/${id}`)}
           onNewThread={handleCreateThread}
+          onDeleteThread={handleDeleteThread}
           loading={loading || actionLoading}
         />
 

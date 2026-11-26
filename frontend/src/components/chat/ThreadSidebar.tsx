@@ -5,6 +5,7 @@ interface ThreadSidebarProps {
   activeThreadId: number | null
   onSelectThread: (id: number) => void
   onNewThread: () => void
+  onDeleteThread?: (id: number) => void
   loading: boolean
 }
 
@@ -26,6 +27,7 @@ export function ThreadSidebar({
   activeThreadId,
   onSelectThread,
   onNewThread,
+  onDeleteThread,
   loading,
 }: ThreadSidebarProps) {
   return (
@@ -54,25 +56,42 @@ export function ThreadSidebar({
           threads.map((t, i) => {
             const active = t.id === activeThreadId
             return (
-              <button
+              <div
                 key={t.id}
                 onClick={() => onSelectThread(t.id)}
-                className={`w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors cursor-pointer mb-0.5 animate-fade-in ${
+                className={`group relative flex items-center justify-between px-3 py-2 rounded-lg text-[13px] transition-colors cursor-pointer mb-0.5 animate-fade-in ${
                   active
                     ? "bg-zinc-800 text-zinc-100"
                     : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
                 }`}
                 style={{ animationDelay: `${i * 0.03}s` }}
               >
-                <div className="flex items-center justify-between">
-                  <span className="truncate font-medium flex-1 mr-2">
+                <div className="flex items-center min-w-0 flex-1 mr-2">
+                  <span className="truncate font-medium flex-1">
                     {t.title || `Thread #${t.id}`}
                   </span>
-                  <span className="text-[11px] text-zinc-600 shrink-0 tabular-nums">
+                </div>
+                <div className="flex items-center space-x-1 shrink-0">
+                  <span className={`text-[11px] text-zinc-600 tabular-nums ${onDeleteThread ? "group-hover:hidden" : ""}`}>
                     {formatTime(t.updated_at)}
                   </span>
+                  {onDeleteThread && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeleteThread(t.id)
+                      }}
+                      title="Delete thread"
+                      className="hidden group-hover:flex items-center justify-center h-5 w-5 rounded text-zinc-500 hover:text-red-400 hover:bg-zinc-700/60 transition-colors"
+                    >
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
-              </button>
+              </div>
             )
           })
         )}

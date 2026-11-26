@@ -113,5 +113,6 @@ export const api = {
   // Chat helpers
   listThreads: () => request<Thread[]>("/chats", { method: "GET" }),
   createThread: (title: string = "New Chat") => request<Thread>("/chats", { method: "POST", body: { title } }),
+  deleteThread: (threadId: number) => request<void>(`/chats/${threadId}`, { method: "DELETE" }),
   getThreadMessages: (threadId: number) => request<ChatMessageItem[]>(`/chats/${threadId}/messages`, { method: "GET" }),
 }

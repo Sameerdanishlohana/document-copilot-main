@@ -115,6 +115,11 @@ def list_message_citations(client: Client, message_id: int) -> list[dict[str, An
     return response.data or []
 
 
+def delete_thread(client: Client, thread_id: int) -> None:
+    """Delete a chat thread and cascade delete its messages and citations."""
+    client.table("chat_threads").delete().eq("id", thread_id).execute()
+
+
 def update_thread_title_if_default(client: Client, thread_id: int, new_title: str) -> None:
     """Update thread title if it is currently 'New Chat' or 'New Research Thread'."""
     thread = get_thread(client, thread_id)

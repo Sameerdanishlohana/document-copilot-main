@@ -53,6 +53,23 @@ def test_thread_forbidden_for_different_user(mock_get_client):
     assert "permission" in res.json()["detail"]
 
 
+@patch("app.api.chat.get_service_role_client")
+def test_delete_thread(mock_get_client):
+    mock_supabase = MagicMock()
+    mock_get_client.return_value = mock_supabase
+
+    # Mock get_thread returning user's thread
+    mock_supabase.table().select().eq().maybe_single().execute.return_value.data = {
+        "id": 5,
+        "owner_id": "user-123",
+        "title": "Chat to Delete",
+    }
+    mock_supabase.table().delete().eq().execute.return_value.data = [{}]
+
+    res = client.delete("/chats/5")
+    assert res.status_code == 204
+
+
 @patch("app.api.chat.run_turn")
 @patch("app.api.chat.get_service_role_client")
 def test_chat_stream_endpoint(mock_get_client, mock_run_turn):
